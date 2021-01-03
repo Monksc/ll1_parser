@@ -1,0 +1,49 @@
+
+
+First
+        
+program:        '(' [0-9]
+foo1:           '(' [0-9]
+foo2:           '(' [0-9]
+foo3:           '(' [0-9]
+
+integer:        [0-9]
+integerTail:    [0-9] epsilon
+
+digit:          [0-9]
+
+op1:            '*' '/'
+op2:            '+' '-'
+
+epsilon:        epsilon
+
+
+
+
+
+Follow
+        
+program:        $$
+foo1:           '+' '-' $$ ')'
+foo2:           '+' '-' '*' '/' $$ ')'
+foo3:           '+' '-' '*' '/' $$ ')'
+
+integer:        $$ ')'
+integerTail:    $$ ')'
+
+digit:          [0-9]
+
+op1:            '*' '/'
+op2:            '+' '-'
+
+epsilon:        epsilon
+
+
+
+LL(1) Table
+
+                '('                 ')'                     [0-9]               epsilon
+program:        program->foo1                               program->foo1       program->$$
+foo1:           foo1->foo2                                  foo1->
+
+

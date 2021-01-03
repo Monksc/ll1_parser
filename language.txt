@@ -1,0 +1,27 @@
+ 
+program     -> foo1;
+foo1        -> foo2 foo1T;
+foo1T       -> op2 foo1 | epsilon;
+foo2        -> foo3 foo2T;
+foo2T       -> op1 foo2 | epsilon;
+foo3        -> '(' foo1 ')' | variable;
+
+variable    -> integer | identifier;
+
+integer     -> digit integerTail;
+integerTail -> integer | epsilon;
+
+identifier  -> letter identifierT;
+identifierT -> letter identifierT | digit identifierT | epsilon;
+
+letter -> uppercase | lowercase;
+lowercase -> 'q' | 'w' | 'e' | 'r' | 't' | 'y' | 'u' | 'i' | 'o' | 'p' | 'a' | 's' | 'd' | 'f' | 'g' | 'h' | 'j' | 'k' | 'l' | 'z' | 'x' | 'c' | 'v' | 'b' | 'n';
+uppercase -> 'Q' | 'W' | 'E' | 'R' | 'T' | 'Y' | 'U' | 'I' | 'O' | 'P' | 'A' | 'S' | 'D' | 'F' | 'G' | 'H' | 'J' | 'K' | 'L' | 'Z' | 'X' | 'C' | 'V' | 'B' | 'N';
+
+digit       -> '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+
+op1         -> '*' | '/';
+op2         -> '+' | '-';
+
+epsilon     -> '';
+
