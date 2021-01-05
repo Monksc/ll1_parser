@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::env;
 use std::fs;
 use std::collections::HashMap;
@@ -178,26 +176,6 @@ impl Interpreter {
         };
     }
 
-    fn parse_number(&self, lines : &mut Peekable<Chars>) -> Result<String, String> {
-
-        // return identifier
-        let mut r = String::new();
-
-        while let Some(c) = lines.peek() {
-            if c.is_ascii_digit() {
-                r.push(*c);
-                lines.next();
-            } else {
-                break;
-            }
-        }
-
-        if r.is_empty() {
-            return Err(String::from("Tried to parse number but didn't find a digit"));
-        }
-
-        return Ok(r);
-    }
 
     fn parse_term_nonterm(&self, lines : &mut Peekable<Chars>) -> 
         Result<TerminalOrNonTerminal, String> {
@@ -759,48 +737,4 @@ mod tests {
     }
 
 
-    // Unit Testing
-
-    #[test]
-    fn test_haskell_like_lang() {
-
-        let contents = fs::read_to_string("haskell_like.lang")
-            .expect("Something went wrong reading the file");
-    
-        let mut interp = Interpreter::new();
-        interp.add_interpreter(&contents);
-
-        let parse = interp.parse(&"program".to_string(), 
-            &"fib a;".to_string()); 
-
-        let result = LanguageProduction {
-            name: "program",
-            index: 0,
-            productions: vec![
-                ("function".to_string(), 
-                 LanguageProductionOrTerm::Prod(
-                     LanguageProduction {
-                         name: "function".to_string(),
-                         index: 0,
-                         productions: vec![
-                            LanguageProductionOrTerm::Prod(
-                                LanguageProduction {
-                                    name: ""
-                                }
-                            )
-                         ],
-                     }
-                 )
-                )
-            ]
-                .into_iter()
-                .collect(),
-        };
-
-        assert_eq!(result, parse, 
-            "Result of testing my haskell like lang is not right. Expected {:#?} Recieved {:#?}.", 
-            result, parse);
-    }
-
 }
-
