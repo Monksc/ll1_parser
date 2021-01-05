@@ -3,7 +3,6 @@
 use std::env;
 use std::fs;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use core::iter::Peekable;
 use std::str::Chars;
 
@@ -41,6 +40,9 @@ struct NonTerminal {
 pub struct Interpreter {
     nonterminals: HashMap<String, NonTerminal>,
 }
+
+
+// MARK: Data structure for result
 
 #[derive(Debug)]
 enum LanguageProductionOrTerm {
@@ -381,8 +383,23 @@ impl Interpreter {
                         (Some(c1), Some(c2)) if *c1 == *c2 => {
                             titr.next(); lines.next();
                         },
-                        (Some(_), _)  => 
-                            return Err("Error trying to parse production.".to_string()),
+                        (Some(_), _)  => {
+                            let mut error_msg = 
+                                String::from("Error trying to parse production. Trying to parse '");
+
+                            error_msg.push_str(t.as_str());
+                            error_msg.push_str("'.");
+
+                            if let Some(c3) = lines.peek() {
+                                error_msg.push_str(" Recieved charater '");
+                                error_msg.push(*c3);
+                                error_msg.push_str("'");
+                            } else {
+                                error_msg.push_str(" Reached EOF.");
+                            }
+                        
+                            return Err(error_msg);
+                        },
                         (None,  _) => break,
                     }
                 }
@@ -426,12 +443,24 @@ impl Interpreter {
                         index: index,
                         productions: productions,
                     });
+                } else if let Err(e) = result {
+                    let mut error = e.clone();
+
+                    error.push_str(" In nonterminal ");
+                    error.push_str(nonterminal.name.as_str());
+                    error.push_str(" parsing the ");
+                    error.push_str(index.to_string().as_str());
+                    error.push_str(" production.");
+
+                    return Err(error);
                 }
             }
         }
 
         //nonterminals_seen.remove(&nonterminal.name);
-        return Err("HELLO".to_string());
+        let mut error_msg = String::from("Could not parse the production ");
+        error_msg.push_str(nonterminal.name.as_str());
+        return Err(error_msg);
     }
 
     pub fn parse(&self, starting_production : &String, lines : &String) -> Result<LanguageProduction, String> {
@@ -728,5 +757,50 @@ mod tests {
             make_f(Err("Forgot a semicolon while parsing a production".to_string())));
 
     }
+
+
+    // Unit Testing
+
+    #[test]
+    fn test_haskell_like_lang() {
+
+        let contents = fs::read_to_string("haskell_like.lang")
+            .expect("Something went wrong reading the file");
+    
+        let mut interp = Interpreter::new();
+        interp.add_interpreter(&contents);
+
+        let parse = interp.parse(&"program".to_string(), 
+            &"fib a;".to_string()); 
+
+        let result = LanguageProduction {
+            name: "program",
+            index: 0,
+            productions: vec![
+                ("function".to_string(), 
+                 LanguageProductionOrTerm::Prod(
+                     LanguageProduction {
+                         name: "function".to_string(),
+                         index: 0,
+                         productions: vec![
+                            LanguageProductionOrTerm::Prod(
+                                LanguageProduction {
+                                    name: ""
+                                }
+                            )
+                         ],
+                     }
+                 )
+                )
+            ]
+                .into_iter()
+                .collect(),
+        };
+
+        assert_eq!(result, parse, 
+            "Result of testing my haskell like lang is not right. Expected {:#?} Recieved {:#?}.", 
+            result, parse);
+    }
+
 }
 
