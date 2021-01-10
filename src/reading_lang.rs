@@ -5,7 +5,7 @@ use std::str::Chars;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
-struct Terminal (String);
+pub struct Terminal (String);
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -41,15 +41,15 @@ pub struct Interpreter {
 // MARK: Data Structures for parsing new Langauge
 
 #[derive(Debug)]
-enum LanguageProductionOrTerm {
+pub enum LanguageProductionOrTerm {
     Term(Terminal),
     Prod(LanguageProduction),
 }
 #[derive(Debug)]
 pub struct LanguageProduction {
-    name : String,
-    index: usize,
-    productions : Vec<LanguageProductionOrTerm>
+    pub name : String,
+    pub index: usize,
+    pub productions : Vec<LanguageProductionOrTerm>
 }
 
 impl Interpreter {
