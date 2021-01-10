@@ -5,7 +5,7 @@ use std::str::Chars;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub struct Terminal (String);
+pub struct Terminal (pub String);
 
 #[derive(Debug)]
 #[derive(PartialEq)]
