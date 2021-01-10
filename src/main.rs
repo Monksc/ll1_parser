@@ -20,8 +20,9 @@ fn main() {
         .expect("Something went wrong reading the file");
 
     let mut interp = Interpreter::new();
-    println!("{:#?}", interp.add_interpreter(&contents));
-    println!("{:#?}", interp);
+    interp.add_interpreter(&contents);
+    //println!("{:#?}", interp.add_interpreter(&contents));
+    //println!("{:#?}", interp);
 
 
     let file_name = &args[2];

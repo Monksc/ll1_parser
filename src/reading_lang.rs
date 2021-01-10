@@ -307,7 +307,7 @@ impl Interpreter {
 
     // MARK: Parsing new Language
 
-    fn can_parse_using_production(&self, production : &Production, next_c : char) //, nonterminals_seen : &mut HashSet<String>) 
+    fn can_parse_using_production(&self, production : &Production, next_c : Option<char>)
         -> bool {
 
         if production.terms.is_empty() {
@@ -316,40 +316,33 @@ impl Interpreter {
 
         let p = &production.terms[0];
         if let TerminalOrNonTerminal::Term(Terminal(s)) = p {
-            if let Some(c) = s.chars().next() {
-                return c == next_c;
+            match (s.chars().next(), next_c) {
+                (Some(c1), Some(c2)) => return c1 == c2,
+                (None, _) => return true,
+                (_, _) => return false,
             }
-            return true;
         } else if let TerminalOrNonTerminal::Non(NonTerm(s)) = p {
             if let Some(non_term) = self.nonterminals.get(s) {
-                return self.can_parse_using_nonterminal(&non_term, next_c); //, nonterminals_seen);
+                return self.can_parse_using_nonterminal(&non_term, next_c);
             }
         }
 
         return true;
     }
 
-    fn can_parse_using_nonterminal(&self, nonterminal : &NonTerminal, next_c : char) //, nonterminals_seen : &mut HashSet<String>) 
+    fn can_parse_using_nonterminal(&self, nonterminal : &NonTerminal, next_c : Option<char>)
         -> bool {
-
-        //if nonterminals_seen.contains(&nonterminal.name) {
-        //    return false;
-        //}
-
-        //nonterminals_seen.insert(nonterminal.name.clone());
 
         for p in &nonterminal.productions {
             if self.can_parse_using_production(&p, next_c) {
-                //nonterminals_seen.remove(&nonterminal.name);
                 return true;
             }
         }
 
-        //nonterminals_seen.remove(&nonterminal.name);
         return false;
     }
 
-    fn parse_using_production(&self, production : &Production, lines : &mut Peekable<Chars>) //, nonterminals_seen : &mut HashSet<String>) 
+    fn parse_using_production(&self, production : &Production, lines : &mut Peekable<Chars>)
         -> Result<Vec<LanguageProductionOrTerm>, String> {
 
         let mut productions = Vec::new();
@@ -385,7 +378,7 @@ impl Interpreter {
                 productions.push(LanguageProductionOrTerm::Term(Terminal(t.clone())));
             } else if let TerminalOrNonTerminal::Non(NonTerm(name)) = term {
                 if let Some(nonterm) = self.nonterminals.get(name) {
-                    let result = self.parse_using_nonterminal(nonterm, lines); //, nonterminals_seen);
+                    let result = self.parse_using_nonterminal(nonterm, lines);
                     if let Ok(lp) = result {
                         productions.push(LanguageProductionOrTerm::Prod(lp));
                     } else if let Err(e) = result {
@@ -398,25 +391,22 @@ impl Interpreter {
         return Ok(productions);
     }
 
-    fn parse_using_nonterminal(&self, nonterminal : &NonTerminal, lines : &mut Peekable<Chars>) //, nonterminals_seen : &mut HashSet<String>)
+    fn parse_using_nonterminal(&self, nonterminal : &NonTerminal, lines : &mut Peekable<Chars>)
         -> Result<LanguageProduction, String> {
 
-        //nonterminals_seen.insert(nonterminal.name.clone());
 
-        let c : char;
-        if let Some(c1) = lines.peek() {
-            c = *c1;
+        let c = if let Some(c1) = lines.peek() {
+            Some(*c1)
         } else {
-            return Err("Could not find character".to_string());
-        }
+            None
+        };
 
         for (index, p) in nonterminal.productions.iter().enumerate() {
-            if self.can_parse_using_production(&p, c) { //, nonterminals_seen) {
+            if self.can_parse_using_production(&p, c) {
 
-                let result = self.parse_using_production(&p, lines); //, nonterminals_seen);
+                let result = self.parse_using_production(&p, lines);
 
                 if let Ok(productions) = result {
-                    //nonterminals_seen.remove(&nonterminal.name);
                     return Ok(LanguageProduction { 
                         name: nonterminal.name.clone(), 
                         index: index,
@@ -436,7 +426,10 @@ impl Interpreter {
             }
         }
 
-        //nonterminals_seen.remove(&nonterminal.name);
+        println!("parsing {:#?}", nonterminal);
+        //println!("{:#?}", lines);
+        println!("{:#?}", lines.peek());
+
         let mut error_msg = String::from("Could not parse the production ");
         error_msg.push_str(nonterminal.name.as_str());
         return Err(error_msg);
@@ -447,8 +440,7 @@ impl Interpreter {
         let mut itr = lines.chars().peekable();
 
         if let Some(current_nonterm) = self.nonterminals.get(starting_production) {
-            //let mut nonterminals_seen = HashSet::new();
-            return self.parse_using_nonterminal(&current_nonterm, &mut itr); //, &mut nonterminals_seen);
+            return self.parse_using_nonterminal(&current_nonterm, &mut itr);
         }
         
         return Err("Could not find production given in language.".to_string());
