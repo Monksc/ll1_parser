@@ -426,10 +426,6 @@ impl Interpreter {
             }
         }
 
-        println!("parsing {:#?}", nonterminal);
-        //println!("{:#?}", lines);
-        println!("{:#?}", lines.peek());
-
         let mut error_msg = String::from("Could not parse the production ");
         error_msg.push_str(nonterminal.name.as_str());
         return Err(error_msg);
